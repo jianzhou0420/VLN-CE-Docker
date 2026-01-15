@@ -1,12 +1,12 @@
 # VLN-CE-Docker
 
-A Dockerized VLN-CE evaluation client. Inspired by OpenPI's Docker eval practice. Docker isolates the benchmark/simulator environment, avoiding dependency conflicts with your model.
+A Dockerized [VLN-CE](https://github.com/jacobkrantz/VLN-CE) evaluation client. Inspired by [OpenPI](https://github.com/Physical-Intelligence/openpi)'s Docker eval practice. Docker isolates the benchmark/simulator environment, avoiding dependency conflicts with your model.
 
-This project decouples the tightly-coupled VLN-CE code. The evaluation client now only produces raw observations and receives native habitat-sim actions.
+This project decouples the tightly-coupled VLN-CE code. The evaluation client now only produces raw observations and receives native [habitat-sim](https://github.com/facebookresearch/habitat-sim) actions.
 
 The Policy Server uses a two-layer abstraction: `PolicyServer` handles WebSocket communication, `Adapter` handles model input/output conversion. See `base_adapter.py` for the abstract base class.
 
-**Note:** This project follows the minimal changes principle. Results on VLN-CE's three baselines are consistent with the original, but the code was largely written with Claude Code and has not been thoroughly reviewed. If you find bugs, please report them in the issues.
+**Note:** This project follows the minimal changes principle. Results on VLN-CE's three baselines are consistent with the original, but the code was largely written with [Claude Code](https://github.com/anthropics/claude-code) and has not been thoroughly reviewed. If you find bugs, please report them in the issues.
 
 
 ## Architecture
@@ -74,7 +74,7 @@ cd docker/vlnce && VLNCE_SERVER=ws://localhost:8765 docker compose up
 ./setup_data.sh --status           # Check what's downloaded
 ```
 
-Matterport3D requires access request at https://niessner.github.io/Matterport/
+[Matterport3D](https://niessner.github.io/Matterport/) requires access request.
 
 
 ## Supported Policies
