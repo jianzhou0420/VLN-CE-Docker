@@ -1,0 +1,143 @@
+# VLN-CE Policy Server Docker Compose
+#
+# Standalone policy server for CMA, Seq2Seq, or Waypoint models.
+# Use profiles to select which server to run.
+#
+# Usage:
+#   # Build the image
+#   docker compose build
+#
+#   # Run CMA server
+#   docker compose --profile cma up
+#
+#   # Run Seq2Seq server
+#   docker compose --profile seq2seq up
+#
+#   # Run Waypoint server
+#   docker compose --profile waypoint up
+#
+#   # Run with custom settings
+#   POLICY_PORT=9000 CMA_CHECKPOINT=/app/data/checkpoints/my_model.pth \
+#     docker compose --profile cma up
+#
+# Required data mounts:
+#   - data/checkpoints/     : Model checkpoint files (.pth)
+#   - data/datasets/        : Vocabulary files (train.json.gz)
+#   - data/ddppo-models/    : DDPPO depth encoder weights
+
+services:
+  cma-server:
+    profiles: ["cma"]
+    image: vlnce-policy-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    tty: true
+    stdin_open: true
+    network_mode: host
+    volumes:
+      - ${CHECKPOINT_DIR:-./data/checkpoints}:/app/data/checkpoints:ro
+      - ${VOCAB_DIR:-./data/datasets}:/app/data/datasets:ro
+      - ${DDPPO_DIR:-./data/ddppo-models}:/app/data/ddppo-models:ro
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONUNBUFFERED=1
+    command:
+      - cma
+      - --port
+      - ${POLICY_PORT:-8765}
+      - --checkpoint
+      - ${CMA_CHECKPOINT:-/app/data/checkpoints/CMA_PM_DA_Aug.pth}
+      - --vocab
+      - ${VOCAB_PATH:-/app/data/datasets/R2R_VLNCE_v1-3_preprocessed/train/train.json.gz}
+      - --ddppo-checkpoint
+      - ${DDPPO_CHECKPOINT:-/app/data/ddppo-models/gibson-2plus-resnet50.pth}
+      - --gpu
+      - ${POLICY_GPU:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  seq2seq-server:
+    profiles: ["seq2seq"]
+    image: vlnce-policy-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    tty: true
+    stdin_open: true
+    network_mode: host
+    volumes:
+      - ${CHECKPOINT_DIR:-./data/checkpoints}:/app/data/checkpoints:ro
+      - ${VOCAB_DIR:-./data/datasets}:/app/data/datasets:ro
+      - ${DDPPO_DIR:-./data/ddppo-models}:/app/data/ddppo-models:ro
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONUNBUFFERED=1
+    command:
+      - seq2seq
+      - --port
+      - ${POLICY_PORT:-8765}
+      - --checkpoint
+      - ${SEQ2SEQ_CHECKPOINT:-/app/data/checkpoints/Seq2Seq_DA.pth}
+      - --vocab
+      - ${VOCAB_PATH:-/app/data/datasets/R2R_VLNCE_v1-3_preprocessed/train/train.json.gz}
+      - --ddppo-checkpoint
+      - ${DDPPO_CHECKPOINT:-/app/data/ddppo-models/gibson-2plus-resnet50.pth}
+      - --gpu
+      - ${POLICY_GPU:-0}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  waypoint-server:
+    profiles: ["waypoint"]
+    image: vlnce-policy-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    tty: true
+    stdin_open: true
+    network_mode: host
+    volumes:
+      - ${CHECKPOINT_DIR:-./data/checkpoints}:/app/data/checkpoints:ro
+      - ${VOCAB_DIR:-./data/datasets}:/app/data/datasets:ro
+      - ${DDPPO_DIR:-./data/ddppo-models}:/app/data/ddppo-models:ro
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - PYTHONUNBUFFERED=1
+    command:
+      - waypoint
+      - --port
+      - ${POLICY_PORT:-8765}
+      - --checkpoint
+      - ${WAYPOINT_CHECKPOINT:-/app/data/checkpoints/HPN.pth}
+      - --vocab
+      - ${VOCAB_PATH:-/app/data/datasets/R2R_VLNCE_v1-3_preprocessed/train/train.json.gz}
+      - --ddppo-checkpoint
+      - ${DDPPO_CHECKPOINT:-/app/data/ddppo-models/gibson-2plus-resnet50.pth}
+      - --gpu
+      - ${POLICY_GPU:-0}
+      - --num-panos
+      - ${NUM_PANOS:-12}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

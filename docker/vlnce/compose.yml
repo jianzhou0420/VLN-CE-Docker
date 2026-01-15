@@ -1,0 +1,61 @@
+# VLN-CE Standalone Evaluation Client Docker Compose
+#
+# This compose file builds and runs from the standalone docker/vlnce directory.
+#
+# Usage (from this directory):
+#   cd docker/vlnce
+#
+#   # Run evaluation client (connects to external policy server)
+#   VLNCE_SERVER=ws://your-server:8765 docker compose up
+#
+#   # Run with custom settings
+#   VLNCE_SERVER=ws://localhost:8765 VLNCE_SPLIT=val_unseen VLNCE_EPISODE_LIMIT=100 \
+#     docker compose up
+#
+# Required data:
+#   Mount your data directories or place them in:
+#   - data/scene_datasets/mp3d/  : Matterport3D scene files (*.glb, *.navmesh)
+#   - data/datasets/R2R_VLNCE_v1-3_preprocessed/ : R2R-CE dataset
+
+services:
+  eval-client:
+    image: vlnce-standalone
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    tty: true
+    stdin_open: true
+    network_mode: host
+    volumes:
+      # Mount data directories (scenes and datasets)
+      # By default uses local data/ subdirectories, override with environment variables
+      - ${DATA_SCENE_DATASETS:-./data/scene_datasets}:/app/data/scene_datasets:ro
+      - ${DATA_DATASETS:-./data/datasets}:/app/data/datasets:ro
+      - ${DATA_DDPPO_MODELS:-./data/ddppo-models}:/app/data/ddppo-models:ro
+      # Mount output directory for results
+      - ${DATA_EVAL_RESULTS:-./data/eval_results}:/app/data/eval_results
+      # EGL/OpenGL for headless rendering
+      - /usr/share/glvnd/egl_vendor.d/10_nvidia.json:/usr/share/glvnd/egl_vendor.d/10_nvidia.json:ro
+    environment:
+      - NVIDIA_DRIVER_CAPABILITIES=all
+      - NVIDIA_VISIBLE_DEVICES=all
+      - HABITAT_SIM_LOG=quiet
+      - MAGNUM_LOG=quiet
+      - PYTHONUNBUFFERED=1
+    command:
+      - --server
+      - ${VLNCE_SERVER:-ws://localhost:8765}
+      - --split
+      - ${VLNCE_SPLIT:-val_seen}
+      - --episode-limit
+      - ${VLNCE_EPISODE_LIMIT:--1}
+      - --results-dir
+      - /app/data/eval_results
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]

@@ -1,0 +1,12 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vlnce-policy-server"
+version = "0.1.0"
+description = "Standalone VLN-CE Policy Server (CMA, Seq2Seq, Waypoint)"
+requires-python = ">=3.8"
+
+[tool.setuptools.packages.find]
+include = ["habitat_extensions*", "vlnce_baselines*", "vlnce_server*"]

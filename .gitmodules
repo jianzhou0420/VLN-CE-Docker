@@ -1,0 +1,12 @@
+[submodule "docker/policy_server/third_party/habitat-lab"]
+	path = docker/policy_server/third_party/habitat-lab
+	url = https://github.com/facebookresearch/habitat-lab.git
+[submodule "docker/vlnce/third_party/habitat-lab"]
+	path = docker/vlnce/third_party/habitat-lab
+	url = https://github.com/facebookresearch/habitat-lab.git
+[submodule "docker/policy_server/third_party/VLN-CE"]
+	path = docker/policy_server/third_party/VLN-CE
+	url = https://github.com/jacobkrantz/VLN-CE.git
+[submodule "docker/vlnce/third_party/VLN-CE"]
+	path = docker/vlnce/third_party/VLN-CE
+	url = https://github.com/jacobkrantz/VLN-CE.git
