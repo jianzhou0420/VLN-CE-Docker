@@ -73,7 +73,24 @@ cd docker/vlnce && VLNCE_SERVER=ws://localhost:8765 docker compose up
 ./setup_data.sh --status           # Check what's downloaded
 ```
 
-[Matterport3D](https://niessner.github.io/Matterport/) scenes must be downloaded manually (requires access request).
+### Matterport3D Scenes (Manual Download Required)
+
+1. Request access at [Matterport3D](https://niessner.github.io/Matterport/)
+2. Download the **habitat** task data (`mp3d_habitat.zip`)
+3. Extract and place scenes in:
+   ```
+   docker/vlnce/data/scene_datasets/mp3d/{scene_id}/{scene_id}.glb
+   ```
+
+Expected structure:
+```
+docker/vlnce/data/scene_datasets/mp3d/
+├── 17DRP5sb8fy/
+│   └── 17DRP5sb8fy.glb
+├── 1LXtFkjw3qL/
+│   └── 1LXtFkjw3qL.glb
+└── ...
+```
 
 
 ## Supported Policies
