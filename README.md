@@ -45,8 +45,8 @@ Original VLN-CE used CUDA 10.2 + PyTorch 1.6.0, which doesn't work on modern GPU
 
 ```bash
 # Clone and init submodules
-git clone <repository-url>
-cd vlnce_docker
+git clone https://github.com/jianzhou0420/VLN-CE-Docker.git
+cd VLN-CE-Docker
 git submodule update --init --recursive
 
 # Download data (interactive menu)
