@@ -2,23 +2,24 @@
 # =============================================================================
 # VLN-CE Data Setup Script
 # =============================================================================
-# Downloads and sets up all required data for VLN-CE:
-#   - Matterport3D scenes (required, needs ToS agreement)
+# Downloads and sets up data for VLN-CE evaluation client:
 #   - RxR dataset (optional, for multilingual experiments)
 #   - RxR BERT text features (optional, 142GB)
+#   - DDPPO depth encoder models
 #   - Pretrained model checkpoints (optional)
+#
+# Note: Matterport3D scenes must be downloaded manually.
+#       See https://niessner.github.io/Matterport/
 #
 # Usage:
 #   ./setup_data.sh [OPTIONS]
 #
 # Options:
-#   --all           Download everything (interactive for MP3D)
-#   --mp3d          Download Matterport3D scenes only
+#   --all           Download everything
 #   --rxr           Download RxR dataset only
 #   --rxr-bert      Download RxR BERT features (142GB, requires gsutil)
 #   --ddppo         Download DDPPO depth encoder models (672MB)
 #   --checkpoints   Download pretrained checkpoints only
-#   --skip-mp3d     Skip MP3D download (use with --all)
 #   --help          Show this help message
 # =============================================================================
 
@@ -102,52 +103,6 @@ download_gdrive() {
 # =============================================================================
 # Download Functions
 # =============================================================================
-
-download_mp3d() {
-    print_header "Matterport3D Scenes Download"
-
-    echo "Matterport3D scenes are REQUIRED for training and evaluation."
-    echo ""
-    echo "Before downloading, you must agree to the Matterport3D Terms of Use:"
-    echo "  https://kaldir.vc.in.tum.de/matterport/MP_TOS.pdf"
-    echo ""
-    echo "The habitat task data (~15GB) will be downloaded to:"
-    echo "  $DATA_DIR/scene_datasets/mp3d/"
-    echo ""
-
-    read -p "Have you read and agreed to the MP3D Terms of Use? (y/N): " confirm
-    if [[ "$confirm" != "y" && "$confirm" != "Y" ]]; then
-        print_warning "Skipping MP3D download. You must agree to ToS to proceed."
-        return 0
-    fi
-
-    # Create output directory
-    mkdir -p "$DATA_DIR/scene_datasets/mp3d"
-
-    # Use the download.py script in project root
-    print_info "Running MP3D download script..."
-    cd "$PROJECT_ROOT"
-
-    # Download habitat task data (contains .glb files)
-    python download.py \
-        -o "$DATA_DIR/scene_datasets/mp3d" \
-        --task_data habitat
-
-    # Extract the habitat zip file
-    local habitat_zip="$DATA_DIR/scene_datasets/mp3d/v1/tasks/mp3d_habitat.zip"
-    if [[ -f "$habitat_zip" ]]; then
-        print_info "Extracting MP3D habitat data..."
-        unzip -o "$habitat_zip" -d "$DATA_DIR/scene_datasets/mp3d/"
-        print_success "Extracted MP3D scenes"
-
-        # Count extracted scenes
-        local scene_count=$(find "$DATA_DIR/scene_datasets/mp3d" -name "*.glb" 2>/dev/null | wc -l)
-        print_info "Found $scene_count scene files (.glb)"
-    else
-        print_error "MP3D habitat zip not found at $habitat_zip"
-        return 1
-    fi
-}
 
 download_rxr_dataset() {
     print_header "RxR Dataset Download"
@@ -307,12 +262,13 @@ show_status() {
         print_warning "RxR Dataset: NOT FOUND"
     fi
 
-    # MP3D Scenes
+    # MP3D Scenes (manual download required)
     local mp3d_count=$(find "$DATA_DIR/scene_datasets/mp3d" -name "*.glb" 2>/dev/null | wc -l)
     if [[ $mp3d_count -gt 0 ]]; then
         print_success "MP3D Scenes: Found $mp3d_count .glb files"
     else
-        print_error "MP3D Scenes: NOT FOUND (required for training/eval)"
+        print_warning "MP3D Scenes: NOT FOUND (manual download required)"
+        print_info "  See https://niessner.github.io/Matterport/"
     fi
 
     # DDPPO Models
@@ -348,22 +304,22 @@ show_help() {
     echo "Usage: $0 [OPTIONS]"
     echo ""
     echo "Options:"
-    echo "  --all           Download everything (interactive for MP3D)"
-    echo "  --mp3d          Download Matterport3D scenes only"
+    echo "  --all           Download everything"
     echo "  --rxr           Download RxR dataset only"
     echo "  --rxr-bert      Download RxR BERT features (142GB, requires gsutil)"
     echo "  --ddppo         Download DDPPO depth encoder models (672MB)"
     echo "  --checkpoints   Download pretrained checkpoints only"
-    echo "  --skip-mp3d     Skip MP3D download (use with --all)"
     echo "  --status        Show current data status"
     echo "  --help          Show this help message"
     echo ""
     echo "Examples:"
     echo "  $0 --status                    # Check what's installed"
-    echo "  $0 --mp3d                      # Download MP3D scenes only"
     echo "  $0 --ddppo                     # Download DDPPO depth encoder models"
     echo "  $0 --rxr --checkpoints         # Download RxR and checkpoints"
-    echo "  $0 --all --skip-mp3d           # Download everything except MP3D"
+    echo "  $0 --all                       # Download everything"
+    echo ""
+    echo "Note: Matterport3D scenes must be downloaded manually."
+    echo "      See https://niessner.github.io/Matterport/"
     echo ""
 }
 
@@ -377,19 +333,19 @@ main() {
     echo "Project root: $PROJECT_ROOT"
     echo "Data directory: $DATA_DIR"
     echo ""
+    echo "Note: Matterport3D scenes must be downloaded manually."
+    echo "      See https://niessner.github.io/Matterport/"
+    echo ""
 
     # Parse arguments
-    local do_mp3d=false
     local do_rxr=false
     local do_rxr_bert=false
     local do_ddppo=false
     local do_checkpoints=false
-    local skip_mp3d=false
     local show_status_only=false
 
     # Default to download all if no arguments provided
     if [[ $# -eq 0 ]]; then
-        do_mp3d=true
         do_rxr=true
         do_ddppo=true
         do_checkpoints=true
@@ -398,14 +354,9 @@ main() {
     while [[ $# -gt 0 ]]; do
         case $1 in
             --all)
-                do_mp3d=true
                 do_rxr=true
                 do_ddppo=true
                 do_checkpoints=true
-                shift
-                ;;
-            --mp3d)
-                do_mp3d=true
                 shift
                 ;;
             --rxr)
@@ -422,10 +373,6 @@ main() {
                 ;;
             --checkpoints)
                 do_checkpoints=true
-                shift
-                ;;
-            --skip-mp3d)
-                skip_mp3d=true
                 shift
                 ;;
             --status)
@@ -456,10 +403,6 @@ main() {
     fi
 
     # Execute downloads
-    if [[ "$do_mp3d" == true && "$skip_mp3d" == false ]]; then
-        download_mp3d
-    fi
-
     if [[ "$do_rxr" == true ]]; then
         download_rxr_dataset
     fi
@@ -481,8 +424,9 @@ main() {
 
     print_header "Setup Complete"
     echo "Next steps:"
-    echo "  1. Activate the vlnce environment: conda activate vlnce"
-    echo "  2. Run a test: python run.py --exp-config vlnce_baselines/config/r2r_baselines/nonlearning.yaml --run-type eval"
+    echo "  1. Download Matterport3D scenes manually"
+    echo "  2. Build Docker container: docker build -t vlnce-client ."
+    echo "  3. Run evaluation with docker compose"
     echo ""
 }
 

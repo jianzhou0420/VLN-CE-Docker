@@ -69,12 +69,11 @@ cd docker/vlnce && VLNCE_SERVER=ws://localhost:8765 docker compose up
 ```bash
 ./setup_data.sh                    # Interactive menu
 ./setup_data.sh --all              # Download everything
-./setup_data.sh --vlnce --mp3d     # Matterport3D scenes (requires access)
 ./setup_data.sh --policy cma       # CMA checkpoint only
 ./setup_data.sh --status           # Check what's downloaded
 ```
 
-[Matterport3D](https://niessner.github.io/Matterport/) requires access request.
+[Matterport3D](https://niessner.github.io/Matterport/) scenes must be downloaded manually (requires access request).
 
 
 ## Supported Policies
